@@ -3,7 +3,7 @@
 
 from langchain_community.document_loaders import TextLoader,DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
 from dotenv import load_dotenv
 import os
@@ -16,13 +16,17 @@ load_dotenv()
 # 1 load the document
 
 def load_document(docs_path="docs"):
+    # Get absolute path of docs directory relative to this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    absolute_docs_path = os.path.join(script_dir, docs_path)
+    
     # check if directory exists
-    if not os.path.exists(docs_path):
-       raise FileNotFoundError("Data directory not found")
+    if not os.path.exists(absolute_docs_path):
+       raise FileNotFoundError(f"Data directory not found at: {absolute_docs_path}")
     
 
     loader = DirectoryLoader(
-        path =  docs_path, 
+        path = absolute_docs_path, 
         glob="*.txt", 
         loader_cls=TextLoader,
         loader_kwargs={'encoding': 'utf-8'}
@@ -66,9 +70,9 @@ def split_document(documents):
 # 3 create embeddings
 
 def create_embeddings():
-    embeddings = OpenAIEmbeddings(
-        model="text-embedding-3-small",
-        openai_api_key=os.getenv("OPENAI_API_KEY"),
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="gemini-embedding-001",
+        google_api_key=os.getenv("GOOGLE_API_KEY"),
     )
     return embeddings
 
