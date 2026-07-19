@@ -3,10 +3,13 @@
 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
 load_dotenv()
 
+ 
 persist_directory = "vector_store"
 
 # load embeddings and vector store
@@ -24,7 +27,7 @@ db = Chroma(
 
 # search the vector store
 
-query = "what are the technical requirements for task manager?"
+query = "what are are the stuffs that discuss in phase 1 of ai genralist?"
 
 
 
@@ -41,6 +44,40 @@ for i, doc in enumerate(relevant_docs):
     print(f"Document {i+1}: {doc.metadata}")
     print(f"Content: {doc.page_content}")
 
+
+# combine the retrieved docs and the query to generate the response
+
+combined_input = f""" based on the following context answer the query
+
+context: {relevant_docs}
+
+query: {query}
+
+please provide the clear and concise answer to the query based on the context, if the answer is not in the context then say that the answer is not in the context
+"""
+
+# create the chatopenai model
+
+from langchain_google_genai import ChatGoogleGenerativeAI
+# Update the model string to 3.5
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.5-flash", 
+    temperature=0.7
+)
+
+
+# massage for the model
+
+messages = [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": combined_input}
+]
+
+# generate the response
+
+response = llm.invoke(messages)
+print("generated response:\n")
+print(response.content)
 
 # synthetic data for testing
 # """
