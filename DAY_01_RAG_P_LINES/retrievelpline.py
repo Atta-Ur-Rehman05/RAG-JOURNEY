@@ -1,126 +1,100 @@
-# this is the retrieval pipline for the RAG system
+"""Retrieval pipeline: search the vector store and generate an answer with Gemini."""
 
-
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_chroma import Chroma
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
+from langchain_chroma import Chroma
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+
+import config
 
 load_dotenv()
 
- 
-persist_directory = "vector_store"
+SYSTEM_PROMPT = "You are a helpful assistant."
 
-# load embeddings and vector store
+RAG_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", SYSTEM_PROMPT),
+        (
+            "user",
+            """Based on the following context, answer the query.
 
-embeddings = GoogleGenerativeAIEmbeddings(
-    model="gemini-embedding-001",
-   
+Context:
+{context}
+
+Query:
+{query}
+
+Provide a clear and concise answer based on the context. If the answer is not in the context, say so.""",
+        ),
+    ]
 )
 
-db = Chroma(
-    persist_directory=persist_directory,
-    embedding_function=embeddings,
-    collection_metadata={"hnsw:space": "cosine"}
+
+def load_vector_store() -> Chroma:
+    """Load the persisted Chroma vector store."""
+    if not config.VECTOR_STORE_DIR.exists():
+        raise FileNotFoundError(
+            f"Vector store not found at: {config.VECTOR_STORE_DIR}. "
+            "Run the ingestion pipeline first."
+        )
+
+    embeddings = GoogleGenerativeAIEmbeddings(model=config.EMBEDDING_MODEL)
+
+    return Chroma(
+        persist_directory=str(config.VECTOR_STORE_DIR),
+        embedding_function=embeddings,
+        collection_metadata={"hnsw:space": "cosine"},
     )
 
-# search the vector store
 
-query = "what are are the stuffs that discuss in phase 1 of ai genralist?"
-
-
-
-
-
-retriever = db.as_retriever(search_kwargs={"k": 3})
-
-relevant_docs = retriever.invoke(query)
-print(f"user query: {query}")
-
-# display results
-
-for i, doc in enumerate(relevant_docs):
-    print(f"Document {i+1}: {doc.metadata}")
-    print(f"Content: {doc.page_content}")
+def retrieve_documents(vector_store: Chroma, query: str, k: int = config.RETRIEVAL_K) -> list:
+    """Retrieve the top-k relevant document chunks for a query."""
+    retriever = vector_store.as_retriever(search_kwargs={"k": k})
+    return retriever.invoke(query)
 
 
-# combine the retrieved docs and the query to generate the response
-
-combined_input = f""" based on the following context answer the query
-
-context: {relevant_docs}
-
-query: {query}
-
-please provide the clear and concise answer to the query based on the context, if the answer is not in the context then say that the answer is not in the context
-"""
-
-# create the chatopenai model
-
-from langchain_google_genai import ChatGoogleGenerativeAI
-# Update the model string to 3.5
-llm = ChatGoogleGenerativeAI(
-    model="gemini-3.5-flash", 
-    temperature=0.7
-)
+def create_llm() -> ChatGoogleGenerativeAI:
+    """Create the Gemini chat model."""
+    return ChatGoogleGenerativeAI(
+        model=config.LLM_MODEL,
+        temperature=config.LLM_TEMPERATURE,
+    )
 
 
-# massage for the model
+def generate_answer(query: str, relevant_docs: list, llm: ChatGoogleGenerativeAI) -> str:
+    """Generate an answer from retrieved context and the user query."""
+    context = "\n\n".join(doc.page_content for doc in relevant_docs)
+    messages = RAG_PROMPT.format_messages(context=context, query=query)
+    response = llm.invoke(messages)
+    return response.content
 
-messages = [
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": combined_input}
-]
 
-# generate the response
+def print_retrieved_documents(query: str, relevant_docs: list) -> None:
+    """Print retrieved chunks for inspection."""
+    print(f"User query: {query}\n")
 
-response = llm.invoke(messages)
-print("generated response:\n")
-print(response.content)
+    for index, doc in enumerate(relevant_docs, start=1):
+        print(f"Document {index}: {doc.metadata}")
+        print(f"Content: {doc.page_content}\n")
 
-# synthetic data for testing
-# """
-# ✅ Task Manager — Functional Feature Checklist
 
-# 🔐 User Authentication
-# User Registration (create account with name, email, password)
-# User Login (secure sign-in with email & password)
-# User Logout (secure session termination & cookie clearing)
-# Persistent Session (JWT stored in HTTP-only cookies)
-# Auth Guard (redirect unauthenticated users to login/register)
+def run_retrieval_pipeline(query: str = config.DEFAULT_QUERY) -> str:
+    """Run retrieval and generation, returning the model response."""
+    vector_store = load_vector_store()
+    relevant_docs = retrieve_documents(vector_store, query)
+    print_retrieved_documents(query, relevant_docs)
 
-# 🗂️ Task Management
-# Task Creation (title, description, due date, priority, tags)
-# Task Editing (update task details via modal interface)
-# Task Completion Toggle (Todo ↔ Completed with live updates)
-# Task Deletion (remove tasks permanently)
-# Task Persistence (stored in local storage for browser persistence)
+    llm = create_llm()
+    answer = generate_answer(query, relevant_docs, llm)
 
-# 🧭 Navigation & Organization
-# Smart Filters (Today, Upcoming, Completed)
-# Global Search (search tasks by title or description)
-# Task Counting (dynamic sidebar badges per category)
-# Project Categorization (group tasks by project/context)
+    print("Generated response:\n")
+    print(answer)
+    return answer
 
-# 📊 Dashboard & Analytics
-# Task Statistics (daily/weekly/monthly completion counts)
-# Priority Distribution (visual breakdown of task priorities)
-# Streak Tracking (consecutive days of task completion)
-# Progress Charts (visualize task completion trends over time)
 
-# 🌙 UI/UX Features
-# Dark Mode / Light Mode Toggle
-# Responsive Design (mobile, tablet, desktop support)
-# Toast Notifications (for task creation, updates, deletion)
-# Empty State Illustrations (for no tasks, no search results)
+def main() -> None:
+    run_retrieval_pipeline()
 
-# 🛠️ Technical Requirements
-# Frontend: React + Vite
-# Backend: Node.js + Express
-# Database: MongoDB (local)
-# Authentication: JWT + bcrypt
-# State Management: React Context API
-# Styling: Tailwind CSS
-# Deployment: Localhost only (no production deployment)
-# """
+
+if __name__ == "__main__":
+    main()
