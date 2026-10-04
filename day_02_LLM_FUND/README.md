@@ -1,220 +1,357 @@
-🧠 RAG — Day 2
-How Large Language Models Work & Prompt Engineering
+<div align="center">
 
-RAG Learning Journey · Day 2
-Understanding how LLMs generate text, how sampling controls their behavior, how context windows work, and how to design reliable prompts.
+# 🧠 LLM Fundamentals
 
-📚 What You'll Learn
+### How Large Language Models Work — From Tokens to Generated Responses
 
-This day focuses on two major foundations of modern AI applications:
+**RAG Learning Journey · Day 2**
 
-🧠 How Large Language Models work
-✍️ How to engineer effective prompts
+[![AI](https://img.shields.io/badge/AI-LLM-blue)](https://github.com/)
+[![RAG](https://img.shields.io/badge/Learning-RAG-green)](https://github.com/)
+[![Python](https://img.shields.io/badge/Python-Learning-yellow)](https://www.python.org/)
+[![Status](https://img.shields.io/badge/Status-Learning-orange)](https://github.com/)
 
-By the end of this day, you should understand:
+> A structured guide to understanding how modern Large Language Models process text, predict tokens, generate responses, and manage context.
 
-How text becomes tokens
-How tokens become embeddings
-How Transformers process context
-How next-token prediction generates responses
-How probabilities and sampling work
-What temperature, top_p, and top_k do
-How context windows and token budgets work
-The difference between input and output tokens
-Zero-shot, one-shot, and many-shot prompting
-Persona-based prompting
-Chain-of-thought prompting
-Structured outputs
-How to combine multiple prompting techniques
-How prompting decisions affect RAG systems
-🗂️ Table of Contents
-How an LLM Works
-Input
+</div>
+
+---
+
+# 📖 Overview
+
+Large Language Models are the foundation behind modern AI applications such as:
+
+* 💬 Chatbots
+* 🔎 AI Search
+* 📚 RAG systems
+* 🤖 AI Agents
+* 💻 Code assistants
+* 📝 Content generation
+* 📊 Information extraction
+* 🧠 Reasoning systems
+
+At their core, language models perform a deceptively simple task:
+
+> **Predict the next token based on the tokens that came before it.**
+
+That process is repeated thousands of times to generate an entire response.
+
+This README builds the mental model from the ground up:
+
+```text
+Text
+ ↓
 Tokens
-Embeddings
-Transformer
-Probabilities
-Pick a Token
-Repeat
-How the Model Learned
-Temperature, top_p and top_k
-Temperature
-top_p / Nucleus Sampling
-top_k
-Weighted Random Draw
-Choosing Values
-Context Window and Tokens
-Input Tokens
-Output Tokens
-Token Budget
-Why Bigger Context Isn't Always Better
-Prompt Types
-Shared Setup
-Zero-Shot
-One-Shot
-Many-Shot
-Persona-Based
-Chain of Thought
-Structured Output
-Combining Prompt Types
-Persona + Structured Output
-CoT + Structured Output
-Many-Shot + Structured Output
-CoT + Many-Shot + Structured
-All Four Combined
-Quick Reference
-Prompt Design Checklist
-Key Takeaways
-1. How an LLM Works
-
-A Large Language Model (LLM) is a neural network trained to predict the next token based on the tokens that came before it.
-
-This simple operation is repeated again and again to produce:
-
-Answers
-Code
-Summaries
-Conversations
-Reasoning
-Structured data
-🔄 Simplified Generation Pipeline
-User Input
-    ↓
-Tokenization
-    ↓
+ ↓
 Token IDs
-    ↓
+ ↓
 Embeddings
-    ↓
-Transformer Layers
-    ↓
-Logits / Scores
-    ↓
+ ↓
+Transformer
+ ↓
+Logits
+ ↓
 Probabilities
-    ↓
+ ↓
 Sampling
-    ↓
+ ↓
 Next Token
-    ↓
-Append Token
-    ↓
+ ↓
 Repeat
-    ↓
-Final Response
+ ↓
+Response
+```
 
-The model continues generating tokens until:
+---
 
-It produces an end-of-sequence token, or
-The maximum output limit is reached.
-Example
-Prompt:
-"Write one short sentence about the sky."
+# 🎯 Learning Objectives
 
-Generated response:
-"The sky is blue."
+By completing this material, you should understand:
 
-The model does not generate the entire sentence at once.
+* What an LLM actually does
+* How text is converted into tokens
+* What token IDs are
+* What embeddings represent
+* Why positional information matters
+* How Transformers process context
+* What self-attention does
+* What feed-forward networks do
+* What logits are
+* How logits become probabilities
+* How the next token is selected
+* What autoregressive generation means
+* What prefill and decode mean
+* Why KV caching matters
+* How LLMs are trained at a high level
+* How temperature changes sampling
+* What `top_p` does
+* What `top_k` does
+* What context windows are
+* How input and output tokens affect usage
+* Why large context does not automatically mean better results
+* Why these concepts matter when building RAG applications
 
-It approximately performs:
+---
 
-The
-   ↓
-The sky
-   ↓
-The sky is
-   ↓
-The sky is blue
-   ↓
-The sky is blue.
+# 🗂️ Table of Contents
 
-Each newly generated token becomes part of the context for the next prediction.
+* [1. What Is an LLM?](#1-what-is-an-llm)
+* [2. LLM Generation Pipeline](#2-llm-generation-pipeline)
+* [3. Input](#3-input)
+* [4. Tokens](#4-tokens)
+* [5. Token IDs](#5-token-ids)
+* [6. Embeddings](#6-embeddings)
+* [7. Positional Information](#7-positional-information)
+* [8. Transformer](#8-transformer)
 
-1.1 Input
+  * [Self-Attention](#81-self-attention)
+  * [Feed-Forward Network](#82-feed-forward-network)
+* [9. Logits and Probabilities](#9-logits-and-probabilities)
+* [10. Token Selection](#10-token-selection)
+* [11. Autoregressive Generation](#11-autoregressive-generation)
+* [12. Prefill and Decode](#12-prefill-and-decode)
+* [13. KV Cache](#13-kv-cache)
+* [14. How LLMs Learn](#14-how-llms-learn)
+* [15. Temperature](#15-temperature)
+* [16. Top-P](#16-top-p)
+* [17. Top-K](#17-top-k)
+* [18. Sampling](#18-sampling)
+* [19. Context Window](#19-context-window)
+* [20. Input vs Output Tokens](#20-input-vs-output-tokens)
+* [21. Token Budget](#21-token-budget)
+* [22. Why Bigger Context Isn't Always Better](#22-why-bigger-context-isnt-always-better)
+* [23. LLMs and RAG](#23-llms-and-rag)
+* [24. Mental Model](#24-mental-model)
+* [25. Final Checklist](#25-final-checklist)
 
-The model's input is everything provided for that request, not merely the user's latest message.
+---
 
-A typical request may contain:
+# 1. What Is an LLM?
 
-System Prompt
-+
+A **Large Language Model (LLM)** is a neural network trained to model language by predicting tokens.
+
+The fundamental operation can be represented as:
+
+```text
+Previous Tokens
+      ↓
+LLM
+      ↓
+Probability Distribution
+      ↓
+Next Token
+```
+
+For example:
+
+```text
+Input:
+
+"The sky is"
+
+Possible next tokens:
+
+blue    → 70%
+clear   → 15%
+gray    → 10%
+green   →  5%
+```
+
+The model selects a token and continues.
+
+```text
+"The sky is blue"
+```
+
+Then it predicts the next token again.
+
+---
+
+# 2. LLM Generation Pipeline
+
+A simplified LLM generation pipeline looks like this:
+
+```text
+┌─────────────────────┐
+│     User Input      │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│     Tokenization    │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│     Token IDs       │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│     Embeddings      │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Transformer Layers  │
+│                     │
+│ Self-Attention      │
+│ Feed Forward        │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│       Logits        │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│   Probabilities     │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│      Sampling       │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│    Next Token       │
+└──────────┬──────────┘
+           ↓
+        Repeat
+```
+
+The model keeps repeating this process until:
+
+* an end-of-sequence condition occurs, or
+* the output limit is reached.
+
+---
+
+# 3. Input
+
+The model's input is not necessarily just the latest user message.
+
+A modern AI application may provide:
+
+```text
+System Instructions
+        +
 Conversation History
-+
+        +
 Retrieved Documents
-+
+        +
 Tool Definitions
-+
+        +
 Tool Results
-+
+        +
 User Message
+```
 
-The model ultimately processes these as one token sequence.
+All of this contributes to the model's input context.
 
-Simplified representation
-<system>
-You are a helpful assistant.
+### Why This Matters
 
-<user>
-Write one short sentence about the sky.
+This is especially important for RAG.
 
-<model>
-The model starts generating here...
+A RAG application may construct:
 
-This is particularly important for RAG because retrieved documents become part of the model's input context.
+```text
+System Prompt
+      +
+Retrieved Chunks
+      +
+Conversation History
+      +
+User Question
+      ↓
+LLM Input
+```
 
-1.2 Tokens
+The model then generates an answer based on this complete context.
 
-LLMs do not directly process words or characters.
+---
 
-They process tokens.
+# 4. Tokens
 
-A token can be:
+LLMs do not directly process human concepts such as "words".
 
-A complete word
-Part of a word
-Punctuation
-A space-prefixed word piece
-Numbers
-Code fragments
+They process **tokens**.
 
-Example:
+A token can represent:
 
-"Write one short sentence about the sky."
+* a complete word
+* part of a word
+* punctuation
+* numbers
+* spaces or word pieces
+* code fragments
 
-May be split conceptually into:
+For example:
 
+```text
+"Write a sentence about AI."
+```
+
+may conceptually become:
+
+```text
 Write
-one
-short
+a
 sentence
 about
-the
-sky
+AI
 .
+```
 
-Each token maps to an integer ID from the model's vocabulary.
+The exact tokenization depends on the model's tokenizer.
 
-Important
+### Important Principle
 
-Token count—not word count—drives model cost and context-window usage.
+> **Token count—not word count—is what matters for model context and token usage.**
 
-The exact tokenization depends on the model.
+Different types of text can have different token efficiency:
 
-Generally:
+| Content          | Token Behavior                   |
+| ---------------- | -------------------------------- |
+| Common English   | Usually efficient                |
+| Rare words       | May require more tokens          |
+| Code             | Can require many tokens          |
+| Numbers          | Can tokenize inefficiently       |
+| Non-English text | Token count varies significantly |
 
-Common English text → fewer tokens
-Rare words → potentially more tokens
-Code → potentially more tokens
-Numbers → potentially more tokens
-Non-English languages → potentially more tokens
+---
 
-This is one reason token awareness is important when building RAG systems.
+# 5. Token IDs
 
-1.3 Embeddings
+After tokenization, each token is mapped to an integer.
 
-After tokenization, token IDs are converted into vectors using an embedding table learned during training.
+```text
+"hello"
+   ↓
+Token
+   ↓
+Token ID
+   ↓
+15339
+```
 
 Conceptually:
 
+```text
+Text
+ ↓
+Tokenizer
+ ↓
+["hello", "world"]
+ ↓
+[15339, 1917]
+```
+
+The model works with these numerical representations rather than raw text.
+
+---
+
+# 6. Embeddings
+
+Token IDs themselves do not contain rich semantic information.
+
+They are mapped into vectors through an embedding table.
+
+```text
 Token
   ↓
 Token ID
@@ -222,574 +359,849 @@ Token ID
 Embedding Lookup
   ↓
 Vector
+```
 
 Example:
 
+```text
 "sky"
    ↓
 [0.12, -0.48, 0.91, 0.07, ...]
+```
 
-These vectors contain learned representations that allow the network to process relationships between tokens.
+These vectors form the numerical representation that the Transformer can process.
 
-Tokens with related meanings can develop similar representations.
+### Semantic Relationships
 
-For example:
-
-sky
-cloud
-weather
-
-may have representations that capture meaningful relationships.
-
-Positional Information
-
-A Transformer also needs information about token position.
-
-For example:
-
-"The dog chased the cat."
-
-is different from:
-
-"The cat chased the dog."
-
-Therefore, positional information is incorporated so the model can distinguish token order.
-
-1.4 Transformer
-
-The vectors are passed through multiple Transformer layers.
-
-The two major components emphasized in the PDF are:
-
-1. Self-Attention
-
-Self-attention allows tokens to consider other tokens when building their representations.
+During training, representations learn useful relationships between tokens.
 
 Conceptually:
 
+```text
+king
+queen
+man
+woman
+```
+
+can develop meaningful relationships in representation space.
+
+---
+
+# 7. Positional Information
+
+A Transformer needs information about **where tokens occur**.
+
+Consider:
+
+```text
+The dog chased the cat.
+```
+
+versus:
+
+```text
+The cat chased the dog.
+```
+
+The same words appear, but their order changes the meaning.
+
+Therefore, the model needs positional information.
+
+```text
+Token Embeddings
+       +
+Position Information
+       ↓
+Transformer Input
+```
+
+---
+
+# 8. Transformer
+
+The Transformer is the central architecture behind modern LLMs.
+
+A simplified Transformer layer:
+
+```text
+Input Representations
+        ↓
+   Self-Attention
+        ↓
+ Add & Normalize
+        ↓
+Feed-Forward Network
+        ↓
+ Add & Normalize
+        ↓
+   Next Layer
+```
+
+This process occurs across many Transformer layers.
+
+---
+
+## 8.1 Self-Attention
+
+Self-attention allows tokens to consider relationships with other tokens in the sequence.
+
+For example:
+
+```text
+"The animal didn't cross the road because it was tired."
+```
+
+The model needs to understand what:
+
+```text
+"it"
+```
+
+refers to.
+
+Attention helps the model establish relationships between tokens.
+
+Conceptually:
+
+```text
 Token A ─────┐
-Token B ─────┼──→ Attention
-Token C ─────┤
-Token D ─────┘
+Token B ─────┤
+Token C ─────┼──→ Attention
+Token D ─────┤
+Token E ─────┘
+```
 
-Different attention heads can focus on different relationships such as:
+Different attention heads can learn to focus on different patterns such as:
 
-Grammar
-References
-Topics
-Relationships between words
-2. Feed-Forward Network
+* grammatical relationships
+* references
+* topics
+* nearby relationships
+* long-range dependencies
 
-After attention, the token representations are processed further through a feed-forward network.
+---
 
-Simplified Transformer layer:
+## 8.2 Feed-Forward Network
 
-Token Embeddings + Positions
-            ↓
-      Self-Attention
-            ↓
-      Add & Normalize
-            ↓
-   Feed-Forward Network
-            ↓
-      Add & Normalize
-            ↓
-       Next Layer
+After attention, representations pass through feed-forward transformations.
 
-This happens across a stack of Transformer layers.
+```text
+Attention Output
+       ↓
+Feed-Forward Network
+       ↓
+Updated Representation
+```
 
-Eventually, the final representation is converted into scores for possible next tokens.
+The repeated combination of attention and feed-forward processing allows the model to build increasingly rich representations.
 
-1.5 Probabilities
+---
 
-The model produces a raw score, called a logit, for every token in its vocabulary.
+# 9. Logits and Probabilities
 
-Conceptually:
+Eventually, the model produces scores for possible next tokens.
 
-Final Vector
-     ↓
-Logits
-     ↓
-Softmax
-     ↓
-Probabilities
+These raw scores are called **logits**.
+
+```text
+Final Representation
+        ↓
+      Logits
+        ↓
+      Softmax
+        ↓
+ Probabilities
+```
 
 Example:
 
-Candidate	Probability
-blue	60%
-clear	25%
-gray	10%
-green	5%
+| Candidate | Probability |
+| --------- | ----------: |
+| `blue`    |         60% |
+| `clear`   |         25% |
+| `gray`    |         10% |
+| `green`   |          5% |
 
-The probabilities sum to approximately:
+The probabilities form a distribution over possible next tokens.
 
-100%
+---
 
-The model can then use these probabilities to decide which token to generate next.
+# 10. Token Selection
 
-1.6 Pick a Token
+The model now needs to select one token.
 
-The model selects one token from the probability distribution.
+Given:
 
-For example:
+```text
+blue    → 60%
+clear   → 25%
+gray    → 10%
+green   → 5%
+```
 
-blue   → 60%
-clear  → 25%
-gray   → 10%
-green  → 5%
+The highest-probability token is:
 
-A weighted random draw might select:
-
+```text
 blue
+```
 
-But it could also select:
+A deterministic strategy may choose it directly.
 
-clear
+A sampling strategy may choose among several candidates according to their probabilities.
 
-even though blue has the highest probability.
+---
 
-Greedy Decoding
+# 11. Autoregressive Generation
 
-At temperature 0, the process is treated as greedy decoding:
+LLMs generate responses **autoregressively**.
 
-Always choose the highest-probability token.
+That means the newly generated token becomes part of the context for the next prediction.
 
-This favors deterministic behavior.
+Example:
 
-1.7 Repeat
-
-After selecting a token, the model appends it to the sequence and runs the generation process again.
-
+```text
 Prompt
   ↓
-Predict token
+"The"
   ↓
-Append token
+"The sky"
   ↓
-Predict next token
+"The sky is"
   ↓
-Append token
+"The sky is blue"
   ↓
-Repeat...
+"The sky is blue."
+```
 
-This is called autoregressive generation.
+The model does not generate the entire answer simultaneously.
 
-Every generated token becomes part of the context used to generate the next token.
+Instead:
 
-Generation stops when:
+```text
+Predict
+  ↓
+Append
+  ↓
+Predict
+  ↓
+Append
+  ↓
+Predict
+  ↓
+...
+```
 
-An end-of-sequence token is produced, or
-The maximum output length is reached.
-Prefill and Decode
+This is one of the most important mental models for understanding LLMs.
 
-Serving can be viewed as two phases:
+---
 
-Prefill
+# 12. Prefill and Decode
 
-The model processes the input prompt.
+LLM serving can be understood as two major phases.
 
-Decode
+## Prefill
+
+The model processes the existing input.
+
+```text
+System Prompt
++
+History
++
+Documents
++
+Question
+       ↓
+    Prefill
+```
+
+## Decode
 
 The model generates output tokens one at a time.
 
-A KV cache stores earlier attention results so they do not need to be recomputed from scratch during every decoding step.
+```text
+Token 1
+ ↓
+Token 2
+ ↓
+Token 3
+ ↓
+Token 4
+ ↓
+...
+```
 
-This is also why long prompts can increase latency.
+### Why It Matters
 
-1.8 How the Model Learned
+Long prompts can increase processing requirements before generation even begins.
 
-The PDF describes several stages involved in training modern language models.
+This is particularly relevant to RAG systems containing large retrieved contexts.
 
-Stage	What Happens	Result
-Pre-training	Predict next tokens over a huge corpus	Language ability + broad knowledge
-Supervised Fine-Tuning	Train on instruction/response pairs	Better instruction following
-Preference Tuning	Humans/models rank responses	More helpful, safer, better-formatted outputs
-Reasoning Training	Reinforcement learning on checkable tasks	Models capable of additional reasoning behavior
-Why This Matters for RAG
+---
 
-LLMs can produce fluent but false information.
+# 13. KV Cache
 
-They also have a knowledge cutoff determined by their training.
+During autoregressive generation, the model repeatedly attends to previously processed tokens.
 
-RAG helps address these limitations by retrieving relevant information and placing it into the model's input context.
+Recomputing everything from scratch would be inefficient.
 
-User Question
+A **KV cache** stores previously computed attention information.
+
+Conceptually:
+
+```text
+Previous Tokens
       ↓
-Retrieve Relevant Documents
+Key / Value States
       ↓
-Add Documents to Context
+     Cache
       ↓
-LLM
+Reuse during decoding
+```
+
+Instead of repeatedly recomputing previous attention states, the model can reuse cached information.
+
+This improves generation efficiency.
+
+---
+
+# 14. How LLMs Learn
+
+Modern LLM development can involve multiple stages.
+
+| Stage                      | Purpose                                           |
+| -------------------------- | ------------------------------------------------- |
+| **Pre-training**           | Learn broad language patterns and knowledge       |
+| **Supervised Fine-Tuning** | Improve instruction following                     |
+| **Preference Tuning**      | Improve helpfulness, safety, and response quality |
+| **Reasoning Training**     | Improve behavior on reasoning/checkable tasks     |
+
+### Simplified Pipeline
+
+```text
+Large Corpus
+     ↓
+Pre-training
+     ↓
+Base Model
+     ↓
+Instruction Training
+     ↓
+Preference / Alignment Training
+     ↓
+More Capable Assistant
+```
+
+---
+
+# 15. Temperature
+
+Temperature controls the shape of the probability distribution during sampling.
+
+Conceptually:
+
+```text
+softmax(logits / T)
+```
+
+### Low Temperature
+
+```text
+T < 1
+```
+
+Produces a more concentrated distribution.
+
+```text
+High probability
       ↓
-Grounded Response
-2. Temperature, top_p and top_k
+Dominates
+```
 
-Three important controls affect the token selection/sampling stage:
+Useful for:
 
-temperature
-top_p
-top_k
+* classification
+* extraction
+* deterministic workflows
+* structured tasks
 
-A simplified sampling pipeline:
+### High Temperature
 
+```text
+T > 1
+```
+
+Produces a flatter distribution.
+
+Useful for:
+
+* brainstorming
+* creative writing
+* diverse generation
+
+### Mental Model
+
+```text
+LOW
+Temperature
+    ↓
+Focused
+Predictable
+Consistent
+
+
+HIGH
+Temperature
+    ↓
+Diverse
+Creative
+Variable
+```
+
+---
+
+# 16. Top-P
+
+`top_p` is also known as **nucleus sampling**.
+
+Instead of selecting a fixed number of tokens, it keeps the smallest group whose cumulative probability reaches the selected threshold.
+
+Example:
+
+```text
+blue    60%
+clear   25%
+gray    10%
+green    5%
+```
+
+With:
+
+```text
+top_p = 0.90
+```
+
+We accumulate:
+
+```text
+blue
+60%
+
+blue + clear
+85%
+
+blue + clear + gray
+95%
+```
+
+Therefore:
+
+```text
+blue
+clear
+gray
+```
+
+remain candidates.
+
+---
+
+# 17. Top-K
+
+`top_k` keeps a fixed number of highest-probability candidates.
+
+Example:
+
+```text
+blue    60%
+clear   25%
+gray    10%
+green    5%
+```
+
+With:
+
+```text
+top_k = 2
+```
+
+Only:
+
+```text
+blue
+clear
+```
+
+remain.
+
+### Top-K vs Top-P
+
+| Property             | Top-K        | Top-P                 |
+| -------------------- | ------------ | --------------------- |
+| Selection            | Fixed number | Probability threshold |
+| Candidate count      | Fixed        | Variable              |
+| Adapts to confidence | ❌            | ✅                     |
+| Example              | `k = 20`     | `p = 0.9`             |
+
+---
+
+# 18. Sampling
+
+After filtering, probabilities are renormalized.
+
+Then a weighted random selection can occur.
+
+```text
 Logits
   ↓
 Temperature
   ↓
 Softmax
   ↓
-top_k
+Top-K / Top-P
   ↓
-top_p
+Renormalization
   ↓
-Renormalize
+Weighted Sampling
   ↓
-Weighted Random Draw
-  ↓
-Selected Token
+Next Token
+```
 
-The exact behavior can vary by model/provider, so always check the documentation for the model being used.
+This explains why identical prompts can sometimes produce different responses.
 
-2.1 Temperature
+---
 
-Temperature controls how concentrated or spread out the probability distribution becomes.
+# 19. Context Window
 
-Conceptually:
+The **context window** is the maximum amount of tokenized information the model can process for a request.
 
-probabilities = softmax(logits / T)
-Low Temperature
-T < 1
+Think of it as the model's working context.
 
-Makes the distribution sharper.
+```text
+┌──────────────────────────────┐
+│       CONTEXT WINDOW         │
+│                              │
+│ System Instructions          │
+│ Few-Shot Examples            │
+│ Chat History                 │
+│ Retrieved Documents          │
+│ Tool Information             │
+│ User Question                │
+│                              │
+│ Generated Output             │
+└──────────────────────────────┘
+```
 
-The highest-probability token becomes more dominant.
+### Critical Principle
 
-Useful for:
+> **Input and output consume context capacity.**
 
-Classification
-Extraction
-Rule-based decisions
-Consistent outputs
-Temperature = 1
-T = 1
+---
 
-Preserves the model's natural probability distribution.
+# 20. Input vs Output Tokens
 
-High Temperature
-T > 1
+## Input Tokens
 
-Flattens the distribution.
+May include:
 
-Lower-probability tokens have more opportunity to be selected.
+* system instructions
+* user message
+* chat history
+* retrieved documents
+* examples
+* tool definitions
+* tool results
 
-Useful for:
+## Output Tokens
 
-Brainstorming
-Creative writing
-Diverse generation
-Simplified intuition
-Low temperature
-→ Focused
-→ Predictable
-→ Less variation
+Represent what the model generates.
 
-High temperature
-→ Diverse
-→ More variation
-→ More surprising outputs
-2.2 top_p — Nucleus Sampling
+Depending on the model/API, reasoning or thinking tokens can also contribute to output usage.
 
-top_p keeps the smallest set of tokens whose cumulative probability reaches p.
+### Simplified
 
-Example:
-
-blue   60%
-clear  25%
-gray   10%
-green   5%
-
-With:
-
-top_p = 0.90
-
-We accumulate:
-
-blue                → 60%
-blue + clear        → 85%
-blue + clear + gray → 95%
-
-Therefore:
-
-blue
-clear
-gray
-
-are retained, while:
-
-green
-
-is removed.
-
-The remaining probabilities are then renormalized.
-
-Important
-
-top_p represents a cumulative probability threshold, not the probability of one individual token.
-
-2.3 top_k
-
-top_k keeps a fixed number of the most likely tokens.
-
-Example:
-
-blue   60%
-clear  25%
-gray   10%
-green   5%
-
-With:
-
-top_k = 2
-
-Only:
-
-blue
-clear
-
-survive.
-
-Their probabilities are then renormalized.
-
-top_k vs top_p
-
-	top_k	top_p
-Selection	Fixed number	Cumulative probability
-Menu size	Always k	Changes with confidence
-Adapts to confidence	❌	✅
-Typical values	20–64	0.8–0.95
-
-When both are used, they act as stacked filters.
-
-2.4 Weighted Random Draw
-
-After filtering and renormalization, the remaining probabilities form a probability distribution.
-
-Imagine a number line:
-
-0 ------------------------------------------- 1
-|-------------|-----------|------------------|
-     blue          clear          gray
-     63.2%         26.3%         10.5%
-
-A random number is generated.
-
-The token whose probability region contains that number is selected.
-
-This explains why the same prompt can sometimes produce different outputs.
-
-Seed
-
-A seed can make the random process more repeatable on a best-effort basis, depending on the provider/model.
-
-2.5 Choosing Values
-
-The PDF provides these practical starting points:
-
-Task	Temperature	top_p	Goal
-Classification / extraction / triage	0–0.2	Default	Consistency
-Rule-based decisions	0–0.2	Default	Fewer slips
-Chat persona	0.4–0.7	0.9–0.95	Natural variation
-Brainstorming / creative writing	0.8–1.2	0.95	Diversity
-Important Rule
-
-Tune one randomness control at a time.
-
-Also, sampling parameters are not universal across providers.
-
-For example:
-
-temperature → commonly available
-top_p → commonly available
-top_k → provider/model dependent
-
-Always check the exact API documentation for your selected model.
-
-3. Context Window and Tokens
-
-The context window is the maximum number of tokens a model can process in a single request.
-
-Think of it as the model's working memory.
-
-┌──────────────────────────────────────┐
-│          CONTEXT WINDOW              │
-│                                      │
-│ System Prompt                        │
-│ Few-Shot Examples                    │
-│ Chat History                         │
-│ Retrieved Documents                  │
-│ User Message                         │
-│                                      │
-│ Thinking / Output                    │
-│ Visible Answer                       │
-└──────────────────────────────────────┘
-Critical Principle
-
-Input and output share the same context window.
-
-3.1 Input Tokens
-
-Input tokens can include:
-
-System prompt
-Few-shot examples
-Conversation history
-Retrieved documents
-Tool definitions
-Tool results
-Current user message
-
-In a stateless API, a chat application generally resends the relevant conversation history with each request.
-
-Therefore:
-
-More conversation
-       ↓
-More input tokens
-       ↓
-More cost + latency
-
-For RAG:
-
-User Question
-      +
-Retrieved Chunks
-      +
-System Prompt
-      +
-Chat History
-      ↓
-Input Context
-3.2 Output Tokens
-
-Output tokens represent what the model generates.
-
-For reasoning models, output may include:
-
-Thinking Tokens
+```text
+Total Context
+=
+Input Tokens
 +
-Visible Answer
+Output Tokens
+```
 
-Both can count toward output limits.
+---
 
-The maximum output setting may cap:
+# 21. Token Budget
 
-Thinking + Visible Answer
+Suppose:
 
-If thinking consumes too much of the output budget, the visible response may be shortened or even cut off.
-
-Reasoning Effort
-
-Depending on the model/API, reasoning effort or thinking budget can influence:
-
-Cost
-Latency
-Output-token usage
-Available reasoning budget
-3.3 Worked Token Budget
-
-Example from the PDF:
-
-Context window = 128,000 tokens
-Maximum output = 8,192 tokens
+```text
+Context Window = 128,000
+Maximum Output = 8,192
+```
 
 Input:
 
-Component	Tokens
-System prompt	1,200
-Few-shot examples	2,500
-Retrieved documents	5,000
-Chat history	1,000
-User message	300
-Total input	10,000
+| Component           |     Tokens |
+| ------------------- | ---------: |
+| System prompt       |      1,200 |
+| Examples            |      2,500 |
+| Retrieved documents |      5,000 |
+| Chat history        |      1,000 |
+| User message        |        300 |
+| **Total**           | **10,000** |
 
-Output:
+Suppose output contains:
 
-Component	Tokens
-Thinking	3,000
-Visible answer	800
-Total output	3,800
+| Component      |    Tokens |
+| -------------- | --------: |
+| Reasoning      |     3,000 |
+| Visible answer |       800 |
+| **Total**      | **3,800** |
 
-Total window usage:
+Total:
 
+```text
 10,000 + 3,800
 = 13,800 tokens
+```
 
-That is approximately:
+The important lesson is that your prompt architecture directly affects:
 
-11% of a 128,000-token context window
-Important
+* cost
+* latency
+* available output space
+* model performance
 
-If thinking consumed 7,600 tokens out of an 8,192-token output cap, only:
+---
 
-592 tokens
+# 22. Why Bigger Context Isn't Always Better
 
-would remain for the visible answer.
+A larger context window is useful, but blindly adding more information can hurt.
 
-Therefore:
+### 1. 💰 Cost
 
-Leave sufficient output headroom when using thinking/reasoning models.
+More tokens generally mean more computation and potentially higher cost.
 
-3.4 Bigger Is Not Always Better
+### 2. ⏱️ Latency
 
-A larger context window does not automatically mean better answers.
+Large prompts require more processing.
 
-1. Cost
+### 3. 🧩 Lost in the Middle
 
-More input tokens generally mean higher cost.
+Important information buried in a huge context may receive less effective attention.
 
-2. Latency
+### 4. 🌪️ Context Noise
 
-Longer inputs can increase processing time.
+Irrelevant or contradictory information can make the task harder.
 
-3. Lost in the Middle
+---
 
-Models may attend less effectively to information buried in the middle of very long prompts.
+## RAG Principle
 
-4. Context Rot
+> **Retrieve fewer, better chunks rather than everything.**
 
-Irrelevant or conflicting information can reduce response quality as context grows.
+Instead of:
 
-RAG Principle
-
-Fewer, better chunks usually beat more chunks.
-
-Instead of retrieving everything:
-
+```text
 20 mediocre chunks
+```
 
 prefer:
 
+```text
 5 highly relevant chunks
+```
 
-when they provide the information needed to answer the question.
+when those five contain the required evidence.
 
-Prompt Organization
+---
 
-A useful strategy:
+# 23. LLMs and RAG
 
-Start
-  ↓
-Important instructions
-  ↓
-Relevant context
-  ↓
-User/task details
-  ↓
-Critical constraints repeated near the end
+This is where LLM fundamentals become directly useful for your RAG journey.
 
-For long conversations:
+A basic RAG system looks like:
 
-Summarize old turns
-Remove irrelevant history
-Trim unnecessary context
+```text
+              ┌──────────────────┐
+              │   User Question  │
+              └────────┬─────────┘
+                       ↓
+              ┌──────────────────┐
+              │     Retrieval    │
+              └────────┬─────────┘
+                       ↓
+              ┌──────────────────┐
+              │ Relevant Chunks  │
+              └────────┬─────────┘
+                       ↓
+              ┌──────────────────┐
+              │ Prompt + Context │
+              └────────┬─────────┘
+                       ↓
+              ┌──────────────────┐
+              │       LLM        │
+              └────────┬─────────┘
+                       ↓
+              ┌──────────────────┐
+              │     Response     │
+              └──────────────────┘
+```
+
+The LLM does **not** magically know your private documents.
+
+RAG gives the model additional information by putting retrieved content into its context.
+
+```text
+Knowledge Base
+     ↓
+Retriever
+     ↓
+Relevant Context
+     ↓
+Prompt
+     ↓
+LLM
+     ↓
+Grounded Answer
+```
+
+---
+
+# 24. Mental Model
+
+If you remember only one pipeline, remember this:
+
+```text
+              USER INPUT
+                   │
+                   ▼
+             TOKENIZATION
+                   │
+                   ▼
+               TOKEN IDs
+                   │
+                   ▼
+              EMBEDDINGS
+                   │
+                   ▼
+             TRANSFORMER
+             ┌─────┴─────┐
+             │           │
+       Attention     Feed Forward
+             │           │
+             └─────┬─────┘
+                   │
+                   ▼
+                 LOGITS
+                   │
+                   ▼
+             PROBABILITIES
+                   │
+                   ▼
+              SAMPLING
+                   │
+                   ▼
+              NEXT TOKEN
+                   │
+                   ▼
+                REPEAT
+                   │
+                   ▼
+              FINAL TEXT
+```
+
+---
+
+# 25. Final Checklist
+
+Before moving forward, make sure you can explain:
+
+### Fundamentals
+
+* [ ] What an LLM is
+* [ ] What next-token prediction means
+* [ ] What tokens are
+* [ ] What token IDs are
+* [ ] What embeddings are
+* [ ] Why positional information is needed
+* [ ] What a Transformer does
+* [ ] What self-attention does
+* [ ] What feed-forward networks do
+* [ ] What logits are
+* [ ] How logits become probabilities
+
+### Generation
+
+* [ ] Autoregressive generation
+* [ ] Greedy decoding
+* [ ] Sampling
+* [ ] Temperature
+* [ ] Top-P
+* [ ] Top-K
+* [ ] Prefill
+* [ ] Decode
+* [ ] KV cache
+
+### Context
+
+* [ ] Context window
+* [ ] Input tokens
+* [ ] Output tokens
+* [ ] Token budget
+* [ ] Context limitations
+* [ ] Context noise
+
+### RAG
+
+* [ ] Why retrieved documents enter the prompt
+* [ ] Why token count matters in RAG
+* [ ] Why retrieval quality matters
+* [ ] Why more context isn't always better
+
+---
+
+# 🧠 Final Takeaway
+
+An LLM can be mentally reduced to:
+
+```text
+Understand Context
+       ↓
+Predict Next Token
+       ↓
+Select Token
+       ↓
+Add Token to Context
+       ↓
+Predict Again
+       ↓
+Repeat
+```
+
+The sophistication comes from the enormous neural network, Transformer architecture, learned representations, attention mechanisms, training process, and sampling strategies behind that loop.
+
+Understanding this pipeline is essential before moving deeper into:
+
+```text
+Prompt Engineering
+        ↓
+Embeddings
+        ↓
+Vector Search
+        ↓
+RAG
+        ↓
+Agents
+        ↓
+LLM Applications
+```
+
+<div align="center">
+
+### 🚀 LLM Fundamentals Complete
+
+**Next → Prompt Engineering**
+
+</div>
