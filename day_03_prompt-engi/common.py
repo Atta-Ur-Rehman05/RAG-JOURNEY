@@ -41,6 +41,7 @@ def ask(system_prompt: str, user_text: str, **params) -> str:
         ],
         **params,
     )
-    print(response.choices[0].message.content)
+    return response.choices[0].message.content
 
-ask(system_prompt,user_text)
+response=ask(system_prompt,user_text)
+print(f"\n{BOLD}{GREEN}🤖 Gemini ❯ {RESET}{response}")

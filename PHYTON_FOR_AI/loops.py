@@ -15,7 +15,7 @@ for i in range(1, 10, 2):  # it print from 1 to 9 with step of 2
 # print odd number from 1 to 10
 for i in range(2, 10, 2):  # it print from 2 to 9 with step of 2
     print(i)    
-     
+       
 
 
 
