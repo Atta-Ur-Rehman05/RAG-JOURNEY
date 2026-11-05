@@ -37,6 +37,11 @@ while an iterator is useful when you want more control over the iteration proces
 
 where does each fit in the bigger picture of programming? a for loop is a common construct in many programming languages, and is often used to iterate over collections of data.
 while an iterator is a more advanced concept that is often used in functional programming and other programming paradigms that require more control over the iteration process.
+
+among them which one is more memory efficient? an iterator is generally more memory efficient than a for loop, because it allows you to iterate over a collection of items one at a time,
+ without having to create a new list or other data structure to hold all the items in memory at once.
+   This can be especially important when working with large datasets or streaming data.
+
     """
 
 
