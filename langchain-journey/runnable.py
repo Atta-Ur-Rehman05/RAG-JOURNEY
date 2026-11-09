@@ -41,10 +41,10 @@ step1 = RunnableLambda(add_ten)
 step2 = RunnableLambda(multiply_two)
 step3 = RunnableLambda(subtract_five)
 
-chain = RunnableSequence(
-    step1,
-    step2,
-    step3
+chain = (       # LCEL langchain expression language
+    step1
+    | step2
+    | step3
 )
 
 result = chain.invoke(5)
