@@ -23,7 +23,7 @@ from langchain_core.runnables import (
 
 # runnable = RunnableLambda(greet)
 
-# result = runnable.invoke("tahira pagal insaan")
+# result = runnable.invoke("atta")
 
 # print(result)
 
