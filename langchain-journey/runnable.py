@@ -13,13 +13,40 @@
 
 
 
-from langchain_core.runnables import RunnableLambda
+from langchain_core.runnables import (
+    RunnableLambda,
+    RunnableSequence
+)
 
-def greet(name):
-    return f"Hello, {name}!"
+# def greet(name):
+#     return f"Hello, {name}!"
 
-runnable = RunnableLambda(greet)
+# runnable = RunnableLambda(greet)
 
-result = runnable.invoke("tahira pagal insaan")
+# result = runnable.invoke("tahira pagal insaan")
+
+# print(result)
+
+
+def add_ten(x):
+    return x + 10
+
+def multiply_two(x):
+    return x * 2
+
+def subtract_five(x):
+    return x - 5
+
+step1 = RunnableLambda(add_ten)
+step2 = RunnableLambda(multiply_two)
+step3 = RunnableLambda(subtract_five)
+
+chain = RunnableSequence(
+    step1,
+    step2,
+    step3
+)
+
+result = chain.invoke(5)
 
 print(result)
