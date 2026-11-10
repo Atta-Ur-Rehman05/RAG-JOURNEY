@@ -3,6 +3,7 @@
 
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
+from langchain.agents import create_agent
 import os
 from dotenv import load_dotenv
 load_dotenv()   
@@ -15,11 +16,11 @@ model = init_chat_model(
 
 
 
+@tool
+def get_weather(city: str) -> str:
+    """Get weather for a city."""
+    return f"It's always sunny in {city}!"
 
-@tool                                  
-def get_weather(location: str) -> str:
-    """Get the weather at a location."""
-    return f"It's sunny in {location}."
 
 # model_with_tools = model.bind_tools([get_weather])
 
@@ -55,28 +56,48 @@ def get_weather(location: str) -> str:
 
 
 
-# parralllel tool calling 
+# # parralllel tool calling 
 
-tools = [get_weather]
-tools_by_name = {tool.name: tool for tool in tools}
-model_with_tools = model.bind_tools(tools)
+# tools = [get_weather]
+# tools_by_name = {tool.name: tool for tool in tools}
+# model_with_tools = model.bind_tools(tools)
 
-response = model_with_tools.invoke(
-    "What's the weather in Boston and Tokyo?"
+# response = model_with_tools.invoke(
+#     "What's the weather in Boston and Tokyo?"
+# )
+
+
+# # The model may generate multiple tool calls
+# print(response.tool_calls)
+# # [
+# #   {'name': 'get_weather', 'args': {'location': 'Boston'}, 'id': 'call_1'},
+# #   {'name': 'get_weather', 'args': {'location': 'Tokyo'}, 'id': 'call_2'},
+# # ]
+
+
+# # Execute all tools (can be done in parallel with async)
+# results = []
+# for tool_call in response.tool_calls:
+#     tool = tools_by_name[tool_call["name"]]
+#     result = tool.invoke(tool_call)
+#     results.append(result)
+
+
+
+    # event streaing tool calling using create agent and tool call streaming
+
+
+create_agent_with_tools = create_agent(model, [get_weather])
+
+streaming_response = create_agent_with_tools.stream_events(
+    {"messages": [{"role": "user", "content": "What's the weather in Boston and Tokyo?"}]},
+    version="v3",
 )
 
+for message in streaming_response.messages:
+    for delta in message.text :
+        print(delta, end="", flush=True)
 
-# The model may generate multiple tool calls
-print(response.tool_calls)
-# [
-#   {'name': 'get_weather', 'args': {'location': 'Boston'}, 'id': 'call_1'},
-#   {'name': 'get_weather', 'args': {'location': 'Tokyo'}, 'id': 'call_2'},
-# ]
+final_state = streaming_response.output
 
-
-# Execute all tools (can be done in parallel with async)
-results = []
-for tool_call in response.tool_calls:
-    tool = tools_by_name[tool_call["name"]]
-    result = tool.invoke(tool_call)
-    results.append(result)
+print("\nFinal State:", final_state)
