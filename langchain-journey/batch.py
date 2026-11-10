@@ -10,10 +10,9 @@ model = init_chat_model(
 
 
 
-responses = model.batch([                              # what does batch do is : Batching a collection of independent requests to a model can significantly improve performance and reduce costs, as the processing can be done in parallel
+for response in model.batch_as_completed([
     "Why do parrots have colorful feathers?",
     "How do airplanes fly?",
     "What is quantum computing?"
-])
-for response in responses:
+]):
     print(response)
